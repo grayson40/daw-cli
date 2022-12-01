@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"os"
 
-	commit "github.com/grayson40/daw/pkg/commit"
 	"github.com/grayson40/daw/types"
 )
 
 func ExecutePush() {
 	// Read commits
-	commits := commit.ReadCommits()
+	commits := ReadCommits()
 
 	// Push commits up local branch
 	pushToBranch(commits)

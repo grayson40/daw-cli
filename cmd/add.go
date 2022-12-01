@@ -4,7 +4,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	add "github.com/grayson40/daw/pkg/add"
+	add "github.com/grayson40/daw/pkg/logic"
 	"github.com/spf13/cobra"
 )
 

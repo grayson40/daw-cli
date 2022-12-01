@@ -4,7 +4,7 @@ Copyright © 2022 Grayson Crozier <graysoncrozier40@gmail.com>
 package cmd
 
 import (
-	push "github.com/grayson40/daw/pkg/push"
+	push "github.com/grayson40/daw/pkg/logic"
 	"github.com/spf13/cobra"
 )
 
