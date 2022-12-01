@@ -24,23 +24,21 @@ Git is used to manage the codebase. Download the latest version of Git [here.](h
 
 **Getting started with daw version control...**
 
-1. Click the green code button on the home page of this repository.
-2. Copy the HTTPS URL provided.
-3. Open a command prompt and navigate to your desired directory.
-4. Clone the repository onto your local machine by executing the command:
+1. To Start, clone the Daw repository from GitHub, change into the Daw directory, and checkout the master branch.
     ```
-    git clone [URL]
-    ```
-5. Navigate to the repository directory by executing the command:
-    ```
+    git clone https://github.com/grayson40/daw-version-control.git
     cd daw-version-control
+    git checkout master
     ```
-6. Build and install the module by executing the commands:
+    Working off the master branch will ensure that you're using the latest released version of Daw.
+
+2. Build and install the module.
     ```
     go build
     go install
     ```
-7. You have now successfully installed the daw version control tool.
+    
+3. You have now successfully installed the daw version control tool.
 
 ## Available Scripts
 
