@@ -14,8 +14,7 @@ import (
 var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show the working tree status",
-	Long: `Displays paths that have differences between the index file and the current HEAD commit, 
-	paths that have differences between the working tree and the index file, and paths in the working tree that are not tracked by Daw`,
+	Long:  `Displays paths that have differences between the index file and the current HEAD commit`,
 	Run: func(cmd *cobra.Command, args []string) {
 		commits := status.ReadCommits()
 		for index, commit := range commits {
