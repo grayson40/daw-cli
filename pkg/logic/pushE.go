@@ -11,14 +11,20 @@ import (
 )
 
 func ExecutePush() {
+	// Throw error if not an initialized repo
+	if !IsInitialized() {
+		fmt.Println("fatal: not a daw repository (or any of the parent directories): .daw")
+		return
+	}
+
 	// Read commits
-	commits := ReadCommits()
+	commits := GetCommits()
 
 	// Push commits up local branch
 	pushToBranch(commits)
 
 	// Clear commits
-	if err := os.Truncate("commits.json", 0); err != nil {
+	if err := os.Truncate("./.daw/commits.json", 0); err != nil {
 		panic(err)
 	}
 }
