@@ -1,6 +1,9 @@
 package daw
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 func ExecuteInit() {
 	// Create .daw directory
@@ -13,6 +16,12 @@ func ExecuteInit() {
 	createEmptyFile(".daw/staged.json")
 	createEmptyFile(".daw/tracked.json")
 	createEmptyFile(".daw/commits.json")
+
+	path, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Initialized empty Daw repository in " + path)
 }
 
 // Creates an empty file with inputted file name
