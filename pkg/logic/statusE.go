@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/grayson40/daw/types"
 )
@@ -30,7 +31,8 @@ func ExecuteStatus() {
 	// TODO: Build function to parse and display tracked files not staged for commit (red)
 	notStaged := GetNotStaged()
 
-	// TODO: check for and show untracked files (red)
+	// Get untracked files
+	notTracked := getUntracked()
 
 	if len(staged) != 0 {
 		// Show changed files to be committed (green)
@@ -40,12 +42,9 @@ func ExecuteStatus() {
 		}
 		// New line for formatting
 		fmt.Println()
-
-		// Show files not staged for commit
-		fmt.Print("Changes not staged for commit:\n  (use \"daw add <file>...\" to update what will be committed)\n  (use \"daw restore <file>...\" to discard changes in working directory)\n\n")
 	} else {
 		// Show no changes added if staged is empty
-		defer fmt.Print("\nno changes added to commit (use \"daw add\" and/or \"daw commit <message>\")")
+		defer fmt.Print("no changes added to commit (use \"daw add\" and/or \"daw commit <message>\")")
 	}
 
 	// Show changed files not staged for commit
@@ -54,7 +53,46 @@ func ExecuteStatus() {
 		for _, file := range notStaged {
 			fmt.Println("\t" + Red + file.Name + White)
 		}
+		fmt.Println()
 	}
+
+	// Display untracked files
+	if len(notTracked) != 0 {
+		fmt.Println("Untracked files:\n  (use \"daw add <file>...\" to include in what will be committed)")
+		for _, file := range notTracked {
+			fmt.Println("\t" + Red + file.Name + White)
+		}
+		fmt.Println()
+	}
+}
+
+// Returns an array of untracked projects in working directory
+func getUntracked() []types.File {
+	var notTracked []types.File
+
+	// Get working directory path
+	path, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	// Get files in working directory
+	dirFiles, err := ioutil.ReadDir(path)
+	if err != nil {
+		panic(err)
+	}
+
+	// Append working directory files
+	for _, file := range dirFiles {
+		fileExtension := filepath.Ext(file.Name())
+
+		// Check if file is tracked
+		if fileExtension == ".flp" && !IsTrackedFile(file.Name()) {
+			notTracked = append(notTracked, types.File{Name: file.Name(), Path: path})
+		}
+	}
+
+	return notTracked
 }
 
 // Returns an array of tracked files that are not staged
