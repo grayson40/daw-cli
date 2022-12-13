@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,54 +23,137 @@ func ExecuteAdd(input []string) {
 		return
 	}
 
-	var inFiles []types.File
+	// Get staged files
+	stagedFiles := GetStaged()
 
-	// TODO: get tracked files
-	// trackedFiles := GetTrackedFiles()
+	// Get tracked files
+	trackedFiles, err := GetTracked()
 
+	// Add all local dir files to staging area
 	if input[0] == "." {
+		// Get path
 		path, err := os.Getwd()
 		if err != nil {
 			panic(err)
 		}
 
+		// Read all files in local dir
 		dirFiles, err := ioutil.ReadDir(path)
 		if err != nil {
 			panic(err)
 		}
 
+		// Iterate over local dir files
 		for _, file := range dirFiles {
+			// Get file name
 			name := file.Name()
+
+			// Only want project files
 			splitString := strings.Split(name, ".")
 			if splitString[1] != "flp" {
+				log.Fatalf("fatal: pathspec '%s' is not valid for tracking", name)
 				continue
 			}
+
+			// Get absolute file path
 			path, err := filepath.Abs(name)
 			if err != nil {
-				panic(err)
+				log.Fatalf("fatal: pathspec '%s' did not match any files", name)
+				return
 			}
+
+			// Get last modified time
 			modTime := GetModifiedTime(name)
-			inFiles = append(inFiles, types.File{
-				Name:  name,
-				Path:  path,
-				Saved: modTime,
-			})
+
+			// Add to tracked if untracked
+			if !IsTrackedFile(name) {
+				trackedFiles = append(trackedFiles, types.File{
+					Name:  name,
+					Path:  path,
+					Saved: modTime,
+				})
+			}
+
+			// Append file for staging
+			if !isStaged(name) {
+				stagedFiles = append(stagedFiles, types.File{
+					Name:  name,
+					Path:  path,
+					Saved: modTime,
+				})
+			}
 		}
 	} else {
+		// Iterate over inputted files
 		for _, file := range input {
+			// Get file name
 			name := file
-			path, err := filepath.Abs(file)
-			if err != nil {
-				panic(err)
+
+			// Only want project files
+			splitString := strings.Split(name, ".")
+			if splitString[1] != "flp" {
+				fmt.Printf("fatal: pathspec '%s' is not valid for tracking", name)
+				return
 			}
-			inFiles = append(inFiles, types.File{Name: name, Path: path})
+
+			// Check if file exists
+			if _, err := os.Stat(name); err != nil {
+				fmt.Printf("fatal: pathspec '%s' did not match any files", name)
+			} else {
+				// Get absolute file path
+				path, err := filepath.Abs(name)
+				if err != nil {
+					log.Fatalf(err.Error())
+				}
+
+				// Get last modified time
+				modTime := GetModifiedTime(name)
+
+				// Add to tracked if untracked
+				if !IsTrackedFile(file) {
+					trackedFiles = append(trackedFiles, types.File{
+						Name:  name,
+						Path:  path,
+						Saved: modTime,
+					})
+				}
+
+				// Append file for staging
+				if !isStaged(name) {
+					stagedFiles = append(stagedFiles, types.File{
+						Name:  name,
+						Path:  path,
+						Saved: modTime,
+					})
+				}
+			}
 		}
 	}
 
-	err := writeStaged(inFiles)
+	// Write to tracked json
+	err = writeTracked(trackedFiles)
 	if err != nil {
 		panic(err)
 	}
+
+	// Write to staged json
+	err = writeStaged(stagedFiles)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// Returns true if file is already staged
+func isStaged(fileName string) bool {
+	stagedFiles := GetStaged()
+
+	for _, file := range stagedFiles {
+		if file.Name == fileName {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Writes commit array to json file, returns err
@@ -82,6 +166,18 @@ func writeStaged(files []types.File) error {
 	err := ioutil.WriteFile("./.daw/staged.json", file, 0644)
 
 	return err
+}
+
+// Write tracked array to json file
+func writeTracked(files []types.File) error {
+	file, err := json.MarshalIndent(files, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+
+	writeErr := ioutil.WriteFile("./.daw/tracked.json", file, 0644)
+
+	return writeErr
 }
 
 // func runPythonScript() {

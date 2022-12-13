@@ -29,31 +29,19 @@ func ExecuteCommit(message string) {
 		return
 	}
 
-	// Read staged files
-	files := GetStaged()
+	// Read staged staged files
+	stagedFiles := GetStaged()
 
-	trackedFiles, err := GetTracked()
-	if err != nil {
-		panic(err)
+	if len(stagedFiles) == 0 {
+		fmt.Println("no changes added to commit (use \"daw add\")")
+		return
 	}
-
-	// TODO: if file not tracked, add to tracked files
-	for _, file := range files {
-		if !IsTrackedFile(file.Name) {
-			trackedFiles = append(trackedFiles, types.File{
-				Name:  file.Name,
-				Path:  file.Path,
-				Saved: file.Saved,
-			})
-		}
-	}
-	writeTracked(trackedFiles)
 
 	// Read commit stack
 	commits := GetCommits()
 
 	// Create new commit and write to commit stack
-	commit := newCommit(files, message)
+	commit := newCommit(stagedFiles, message)
 	commits = append([]types.Commit{commit}, commits...)
 	writeErr := writeCommit(commits)
 	if writeErr != nil {
@@ -98,7 +86,6 @@ func GetCommits() []types.Commit {
 	json.Unmarshal(byteValue, &commits)
 
 	return commits
-
 }
 
 // Writes commit array to json file, returns err
@@ -111,15 +98,4 @@ func writeCommit(commits []types.Commit) error {
 	err := ioutil.WriteFile("./.daw/commits.json", file, 0644)
 
 	return err
-}
-
-func writeTracked(files []types.File) error {
-	file, err := json.MarshalIndent(files, "", "\t")
-	if err != nil {
-		panic(err)
-	}
-
-	writeErr := ioutil.WriteFile("./.daw/tracked.json", file, 0644)
-
-	return writeErr
 }
