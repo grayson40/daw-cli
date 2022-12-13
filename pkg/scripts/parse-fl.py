@@ -1,3 +1,5 @@
+# Copyright © 2022 Grayson Crozier <grayson40@gmail.com>
+
 import argparse
 import pyflp as fl
 import os
