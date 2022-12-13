@@ -15,7 +15,6 @@ var commitCmd = &cobra.Command{
 	Long:  `This command will commit staged project file(s) with a specified message.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// fmt.Println("commit called args= " + strings.Join(args, " "))
 		commit.ExecuteCommit(args[0])
 	},
 }

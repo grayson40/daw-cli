@@ -19,6 +19,10 @@ func ExecutePush() {
 
 	// Read commits
 	commits := GetCommits()
+	if len(commits) == 0 {
+		fmt.Println("Everything up-to-date")
+		return
+	}
 
 	// Push commits up local branch
 	pushToBranch(commits)
