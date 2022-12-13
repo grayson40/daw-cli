@@ -48,7 +48,12 @@ func ExecuteAdd(input []string) {
 			if err != nil {
 				panic(err)
 			}
-			inFiles = append(inFiles, types.File{Name: name, Path: path})
+			modTime := GetModifiedTime(name)
+			inFiles = append(inFiles, types.File{
+				Name:  name,
+				Path:  path,
+				Saved: modTime,
+			})
 		}
 	} else {
 		for _, file := range input {

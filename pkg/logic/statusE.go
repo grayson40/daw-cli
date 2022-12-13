@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/grayson40/daw/types"
 )
@@ -111,16 +112,43 @@ func GetNotStaged() []types.File {
 		panic(err)
 	}
 
-	// Append working directory files
 	for _, file := range dirFiles {
-		// If file has changes and is not staged add to not staged
-		// Check if file is tracked & check if not staged
-		if IsTrackedFile(file.Name()) && !IsStagedFile(file.Name()) {
+		// If file is tracked, not staged and has changes. Append to list
+		if IsTrackedFile(file.Name()) && !IsStagedFile(file.Name()) && isModifiedFile(file.Name()) {
 			notStaged = append(notStaged, types.File{Name: file.Name(), Path: path})
 		}
 	}
 
 	return notStaged
+}
+
+func isModifiedFile(fileName string) bool {
+	// get last modified time from dir
+	modTime := GetModifiedTime(fileName)
+
+	// get last modified time from json
+	trackedFiles, err := GetTracked()
+	if err != nil {
+		panic(err)
+	}
+
+	// Find tracked file and compare mod times
+	for _, file := range trackedFiles {
+		if file.Name == fileName {
+			return modTime != file.Saved
+		}
+	}
+
+	return false
+}
+
+// Returns last modified time from local dir
+func GetModifiedTime(fileName string) time.Time {
+	f, err := os.Stat(fileName)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return f.ModTime()
 }
 
 // Returns true if file is staged, false otherwise

@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 type Commit struct {
 	Files   []File `json:"Files"`
 	Message string `json:"Message"`
@@ -7,6 +9,7 @@ type Commit struct {
 }
 
 type File struct {
-	Name string `json:"Name"`
-	Path string `json:"Path"`
+	Name  string    `json:"Name"`
+	Path  string    `json:"Path"`
+	Saved time.Time `json:"Saved"`
 }

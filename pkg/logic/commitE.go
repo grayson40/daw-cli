@@ -40,7 +40,11 @@ func ExecuteCommit(message string) {
 	// TODO: if file not tracked, add to tracked files
 	for _, file := range files {
 		if !IsTrackedFile(file.Name) {
-			trackedFiles = append(trackedFiles, types.File{Name: file.Name, Path: file.Path})
+			trackedFiles = append(trackedFiles, types.File{
+				Name:  file.Name,
+				Path:  file.Path,
+				Saved: file.Saved,
+			})
 		}
 	}
 	writeTracked(trackedFiles)
