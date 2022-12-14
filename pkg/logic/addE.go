@@ -23,6 +23,12 @@ func ExecuteAdd(input []string) {
 		return
 	}
 
+	// Throw error if user credentials not configured
+	if _, err := os.Stat("./.daw/credentials.json"); err != nil {
+		fmt.Println("fatal: user credentials not configured\n  (use \"daw config --username <username> --email <email>\" to configure user credentials)")
+		return
+	}
+
 	// Get staged files
 	stagedFiles := GetStaged()
 
@@ -51,7 +57,6 @@ func ExecuteAdd(input []string) {
 			// Only want project files
 			splitString := strings.Split(name, ".")
 			if splitString[1] != "flp" {
-				log.Fatalf("fatal: pathspec '%s' is not valid for tracking", name)
 				continue
 			}
 

@@ -25,6 +25,7 @@ func ExecuteInit() {
 		panic(err)
 	}
 	fmt.Println("Initialized empty Daw repository in " + path)
+	fmt.Println("  (use \"daw config --username <username> --email <email>\" to configure user credentials)")
 }
 
 // Creates an empty file with inputted file name
