@@ -1,3 +1,6 @@
+/*
+Copyright © 2022 Grayson Crozier <grayson40@gmail.com>
+*/
 package daw
 
 import (
