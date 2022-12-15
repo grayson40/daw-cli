@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/grayson40/daw/pkg/db"
 	"github.com/grayson40/daw/types"
 )
 
@@ -40,7 +41,6 @@ func ExecutePush() {
 }
 
 func pushToBranch(commits []types.Commit) {
-	// Push up branch linked to commits
-	fmt.Print("pushing: ")
-	fmt.Println(commits)
+	// Update commits
+	db.UpdateCommits(commits)
 }
