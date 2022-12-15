@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	initialize "github.com/grayson40/daw/pkg/logic"
@@ -19,7 +20,7 @@ var initCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		path, err := os.Getwd()
 		if err != nil {
-			panic(err)
+			log.Fatal(err.Error())
 		}
 		if initialize.IsInitialized() {
 			fmt.Println("Reinitialized existing Daw repository in " + path + "\\.daw")
