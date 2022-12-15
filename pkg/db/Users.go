@@ -5,6 +5,9 @@ package db
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -12,6 +15,7 @@ import (
 	"github.com/grayson40/daw/types"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -52,31 +56,95 @@ func CreateUser(username string, email string) types.User {
 	user := types.User{
 		UserName: username,
 		Email:    email,
+		Commits:  nil,
 	}
 	return user
 }
 
 // Adds user to mongoDB users collection. Returns error
 func AddUser(user types.User) error {
-	if UserExists(user.UserName) {
+	if UserExists(user.Email) {
 		return nil
 	}
 	_, err := usersCollection.InsertOne(context.TODO(), &user)
 	return err
 }
 
-// Returns true if user exists, false otherwise
-func UserExists(username string) bool {
-	users := GetUsers()
+// Returns the current user
+func GetCurrentUser() types.User {
+	var user types.User
 
-	// Iterate through users
-	for _, user := range users {
-		if user["user_name"] == username {
-			return true
-		}
+	// Open json credentials file
+	jsonFile, err := os.Open("./.daw/credentials.json")
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	return false
+	defer jsonFile.Close()
+
+	// Read data into user
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &user)
+
+	// Find user by email and decode res from db
+	var currentUser types.User
+	err = usersCollection.FindOne(context.TODO(), bson.D{{
+		Key:   "email",
+		Value: user.Email,
+	}}).Decode(&currentUser)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return currentUser
+}
+
+// Returns current user
+func GetUserCommits() []types.Commit {
+	return GetCurrentUser().Commits
+}
+
+// Pushes commits to db
+func UpdateCommits(commits []types.Commit) *mongo.UpdateResult {
+	// Get current user
+	currentUser := GetCurrentUser()
+
+	// Append pushed commits
+	for _, commit := range commits {
+		currentUser.Commits = append(currentUser.Commits, commit)
+	}
+
+	// Grab user id
+	id, _ := primitive.ObjectIDFromHex(currentUser.ID.Hex())
+
+	// Apply filter and update
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "commits", Value: currentUser.Commits}}}}
+	res, err := usersCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return res
+}
+
+// Returns true if user exists, false otherwise
+func UserExists(email string) bool {
+	cursor, err := usersCollection.Find(context.TODO(), bson.D{{
+		Key:   "email",
+		Value: email,
+	}})
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	// convert the cursor result to bson
+	var results []bson.M
+	if err = cursor.All(context.TODO(), &results); err != nil {
+		log.Fatalf("Some error occured. Err: %s", err)
+	}
+
+	return len(results) != 0
 }
 
 // Returns a list of users in bson format
@@ -95,25 +163,3 @@ func GetUsers() []bson.M {
 
 	return results
 }
-
-// func main() {
-
-// 	// FOR QUERYING
-
-// 	// retrieve all the documents in a collection
-// 	cursor, err := usersCollection.Find(context.TODO(), bson.D{})
-// 	if err != nil {
-// 		log.Fatalf("Some error occured. Err: %s", err)
-// 	}
-
-// 	// convert the cursor result to bson
-// 	var results []bson.M
-// 	if err = cursor.All(context.TODO(), &results); err != nil {
-// 		log.Fatalf("Some error occured. Err: %s", err)
-// 	}
-
-// 	// display the documents retrieved
-// 	for _, result := range results {
-// 		fmt.Println(result)
-// 	}
-// }
