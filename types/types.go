@@ -21,9 +21,14 @@ type File struct {
 	Saved time.Time `bson:"saved,omitempty" json:"saved"`
 }
 
+type Project struct {
+	File    File     `bson:"file,omitempty" json:"file"`
+	Commits []Commit `bson:"commits,omitempty" json:"commits"`
+}
+
 type User struct {
 	ID       primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
 	Email    string             `bson:"email,omitempty" json:"email"`
-	UserName string             `bson:"user_name,omitempty" json:"user_name"`
-	Commits  []Commit           `bson:"commits,omitempty" json:"commits"`
+	UserName string             `bson:"username,omitempty" json:"username"`
+	Projects []Project          `bson:"projects,omitempty" json:"projects"`
 }
