@@ -10,7 +10,8 @@ import (
 	"log"
 	"os"
 
-	db "github.com/grayson40/daw/pkg/db"
+	req "github.com/grayson40/daw/pkg/requests"
+	"github.com/grayson40/daw/types"
 )
 
 func ExecuteConfig(username string, email string) {
@@ -26,19 +27,41 @@ func ExecuteConfig(username string, email string) {
 		return
 	}
 
-	// Create user
-	user := db.CreateUser(username, email)
-
-	// Add user to db
-	err := db.AddUser(user)
-	if err != nil {
-		log.Fatal(err)
+	// See if user already exists
+	users := req.GetUsers()
+	for _, user := range users {
+		if user.Email == email {
+			// Add credentials to json file
+			writeUserCredentials(user)
+			return
+		}
 	}
 
+	// Create user
+	user := createUser(email, username)
+
+	// Post user to db
+	req.AddUser(user)
+
+	// Add credentials to json file
+	writeUserCredentials(user)
+}
+
+// Writes user credentials to json
+func writeUserCredentials(user types.User) {
 	// Add credentials to json file
 	file, err := json.MarshalIndent(user, "", "\t")
 	if err != nil {
 		log.Fatal(err)
 	}
 	ioutil.WriteFile("./.daw/credentials.json", file, 0644)
+}
+
+// Returns user type
+func createUser(email string, username string) types.User {
+	return types.User{
+		Email:    email,
+		UserName: username,
+		Projects: []types.Project{},
+	}
 }

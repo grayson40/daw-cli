@@ -4,10 +4,12 @@ Copyright © 2022 Grayson Crozier <grayson40@gmail.com>
 package daw
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 
-	"github.com/grayson40/daw/pkg/db"
+	"github.com/grayson40/daw/pkg/requests"
 	"github.com/grayson40/daw/types"
 )
 
@@ -31,8 +33,30 @@ func ExecutePush() {
 		return
 	}
 
+	// // Append tracked files to db
+	// trackedFiles, err := GetTracked()
+	// if err != nil {
+	// 	log.Fatal(err.Error())
+	// }
+
+	// Get current user id
+	userId := GetCurrentUser().ID.Hex()
+	currentUser := requests.GetUser(userId)
+
+	// Get current user projects
+	currentUserProjects := currentUser.Projects
+	for _, commit := range commits {
+		for _, file := range commit.Files {
+			project := types.Project{
+				File:    file,
+				Commits: nil,
+			}
+			currentUserProjects = append(currentUserProjects, project)
+		}
+	}
+
 	// Push commits up local branch
-	pushToBranch(commits)
+	// pushToBranch(commits)
 
 	// Clear commits
 	if err := os.Truncate("./.daw/commits.json", 0); err != nil {
@@ -40,7 +64,23 @@ func ExecutePush() {
 	}
 }
 
-func pushToBranch(commits []types.Commit) {
-	// Update commits
-	db.UpdateCommits(commits)
+// func pushToBranch(commits []types.Commit) {
+// 	// Update commits
+// 	db.UpdateCommits(commits)
+// }
+
+func GetCurrentUser() types.User {
+	var user types.User
+
+	jsonFile, err := os.Open("./.daw/credentials.json")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &user)
+
+	return user
 }
