@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/grayson40/daw/pkg/requests"
 	"github.com/grayson40/daw/types"
 )
 
@@ -146,6 +147,32 @@ func ExecuteAdd(input []string) {
 	if err != nil {
 		panic(err)
 	}
+
+	// Add to user project files if dne
+	currentUserId := GetCurrentUser().ID.Hex()
+	userProjectFiles := requests.GetProjects(currentUserId)
+	userTrackedFiles, err := GetTracked()
+	for _, trackedFile := range userTrackedFiles {
+		if !projectFileInDb(userProjectFiles, trackedFile.Name) {
+			project := types.Project{
+				File:    trackedFile,
+				Commits: nil,
+			}
+			userProjectFiles = append(userProjectFiles, project)
+		}
+	}
+
+	// Write updated project files to db
+}
+
+// Returns true if project file exists in db
+func projectFileInDb(userProjectFiles []types.Project, fileName string) bool {
+	for _, projectFile := range userProjectFiles {
+		if projectFile.File.Name == fileName {
+			return true
+		}
+	}
+	return false
 }
 
 // Returns true if file is already staged
@@ -184,45 +211,3 @@ func writeTracked(files []types.File) error {
 
 	return writeErr
 }
-
-// func runPythonScript() {
-// 	var cmd *exec.Cmd
-
-// 	if len(input) == 1 {
-// 		// Execute python script
-// 		cmd = exec.Command("python", "C:/Users/grays/src/repos/daw/pkg/scripts/parse-fl.py", "--input", input[0])
-// 	} else {
-// 		// Format file name args
-// 		var files = strings.Join(input, " ")
-
-// 		// Execute python script
-// 		cmd = exec.Command("python", "C:/Users/grays/src/repos/daw/pkg/scripts/parse-fl.py", "--input", files)
-// 	}
-
-// 	stdout, err := cmd.StdoutPipe()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	stderr, err := cmd.StderrPipe()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	err = cmd.Start()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	go copyOutput(stdout)
-// 	go copyOutput(stderr)
-
-// 	cmd.Wait()
-// }
-
-// func copyOutput(r io.Reader) {
-// 	scanner := bufio.NewScanner(r)
-// 	for scanner.Scan() {
-// 		fmt.Println(scanner.Text())
-// 	}
-// }
