@@ -67,8 +67,8 @@ def get_user_by_id(user_id):
 # Get user projects
 def get_user_projects(user_id):
     cursor = users_collection.find_one(ObjectId(user_id))
-    user = dumps(cursor, indent=4)
-    return user["projects"]
+    projects = dumps(cursor["projects"], indent=4)
+    return projects
 
 
 # Delete all users for testing

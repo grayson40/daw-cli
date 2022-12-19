@@ -39,18 +39,19 @@ def user():
 @app.route("/users", methods=["GET"])
 def users():
     return get_users()
-    
+
 
 @app.route("/delete", methods=["GET"])
 def delete():
     delete_all_users()
     return "", "200"
 
-# # Return all user projects
-# @app.route("/projects", methods=["GET"])
-# def projects():
-#     user_id = request.args.get("id")
-#     return get_user_projects(user_id)
+
+# Return all user projects
+@app.route("/projects", methods=["GET"])
+def projects():
+    user_id = request.args.get("id")
+    return get_user_projects(user_id)
 
 
 # @app.route("/channels")
