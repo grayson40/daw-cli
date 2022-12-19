@@ -51,6 +51,8 @@ def delete():
 @app.route("/projects", methods=["GET"])
 def projects():
     user_id = request.args.get("id")
+    if user_id == None:
+        return "", "403"
     return get_user_projects(user_id)
 
 
