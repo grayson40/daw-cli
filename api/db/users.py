@@ -40,7 +40,7 @@ def get_users():
 def create_user(username, email, projects):
     user = User(username=username, email=email, projects=projects)
     user_id = users_collection.insert_one(user).inserted_id
-    return user_id
+    return dumps({"_id": ObjectId(user_id)}, indent=4)
 
 
 # Get user by email
@@ -69,3 +69,12 @@ def get_user_projects(user_id):
     cursor = users_collection.find_one(ObjectId(user_id))
     user = dumps(cursor, indent=4)
     return user["projects"]
+
+
+# Delete all users for testing
+def delete_all_users():
+    cursor = users_collection.find()
+    users = list(cursor)
+    for user in users:
+        user_id = user["_id"]
+        users_collection.delete_one({"_id": ObjectId(user_id)})

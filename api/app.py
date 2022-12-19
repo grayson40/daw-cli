@@ -1,5 +1,8 @@
 from flask import Flask, jsonify, request
 from .db.users import *
+from json import loads
+from bson.json_util import dumps
+
 
 app = Flask(__name__)
 
@@ -26,9 +29,8 @@ def user():
         content_type = request.headers.get("Content-Type")
         if content_type == "application/json":
             json = request.json
-            print(json["projects"])
-            create_user(json["username"], json["email"], json["projects"])
-            return "", "204"
+            user_id = create_user(json["username"], json["email"], json["projects"])
+            return user_id
         else:
             return "Content-Type not supported!"
 
@@ -37,6 +39,12 @@ def user():
 @app.route("/users", methods=["GET"])
 def users():
     return get_users()
+    
+
+@app.route("/delete", methods=["GET"])
+def delete():
+    delete_all_users()
+    return "", "200"
 
 # # Return all user projects
 # @app.route("/projects", methods=["GET"])

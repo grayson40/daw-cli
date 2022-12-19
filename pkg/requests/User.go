@@ -11,10 +11,11 @@ import (
 	"net/http"
 
 	"github.com/grayson40/daw/types"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // POST request to create user
-func AddUser(user types.User) {
+func AddUser(user types.User) primitive.ObjectID {
 	// Encode the data
 	postBody, _ := json.Marshal(user)
 	responseBody := bytes.NewBuffer(postBody)
@@ -27,6 +28,18 @@ func AddUser(user types.User) {
 
 	// Doesn't really need to defer
 	defer resp.Body.Close()
+
+	// Read response
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	// Decode json response
+	var userID types.UserID
+	json.Unmarshal(body, &userID)
+
+	return userID.ID
 }
 
 // GET request to get users

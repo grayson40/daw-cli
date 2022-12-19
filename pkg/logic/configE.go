@@ -27,21 +27,13 @@ func ExecuteConfig(username string, email string) {
 		return
 	}
 
-	// See if user already exists
-	users := req.GetUsers()
-	for _, user := range users {
-		if user.Email == email {
-			// Add credentials to json file
-			writeUserCredentials(user)
-			return
-		}
-	}
-
 	// Create user
 	user := createUser(email, username)
 
-	// Post user to db
-	req.AddUser(user)
+	// Post user to db if not in there
+	if !userExists(user) {
+		user.ID = req.AddUser(user)
+	}
 
 	// Add credentials to json file
 	writeUserCredentials(user)
@@ -64,4 +56,16 @@ func createUser(email string, username string) types.User {
 		UserName: username,
 		Projects: []types.Project{},
 	}
+}
+
+// Returns true if user exists in db
+func userExists(inUser types.User) bool {
+	// See if user already exists
+	users := req.GetUsers()
+	for _, user := range users {
+		if user.Email == inUser.Email && user.UserName == inUser.UserName {
+			return true
+		}
+	}
+	return false
 }
