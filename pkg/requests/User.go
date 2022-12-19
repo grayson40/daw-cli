@@ -83,3 +83,23 @@ func GetUsers() []types.User {
 
 	return users
 }
+
+func GetUserIdByEmail(email string) primitive.ObjectID {
+	// Response
+	resp, err := http.Get(BASE_URL + "/user?email=" + email)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	// Read response
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	// Decode json response
+	var user types.User
+	json.Unmarshal(body, &user)
+
+	return user.ID
+}

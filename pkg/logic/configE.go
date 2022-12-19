@@ -30,9 +30,11 @@ func ExecuteConfig(username string, email string) {
 	// Create user
 	user := createUser(email, username)
 
-	// Post user to db if not in there
+	// Post user to db if not in there, get ID
 	if !userExists(user) {
 		user.ID = req.AddUser(user)
+	} else {
+		user.ID = req.GetUserIdByEmail(email)
 	}
 
 	// Add credentials to json file
