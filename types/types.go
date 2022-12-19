@@ -32,3 +32,7 @@ type User struct {
 	UserName string             `bson:"username,omitempty" json:"username"`
 	Projects []Project          `bson:"projects,omitempty" json:"projects"`
 }
+
+type UserID struct {
+	ID primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+}
