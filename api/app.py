@@ -41,19 +41,36 @@ def users():
     return get_users()
 
 
-@app.route("/delete", methods=["GET"])
+@app.route("/delete", methods=["DELETE"])
 def delete():
     delete_all_users()
     return "", "200"
 
 
 # Return all user projects
-@app.route("/projects", methods=["GET"])
+@app.route("/projects", methods=["GET", "POST"])
 def projects():
-    user_id = request.args.get("id")
-    if user_id == None:
-        return "", "403"
-    return get_user_projects(user_id)
+    user_id = request.args.get("user_id")
+    if request.method == "GET":
+        if user_id == None:
+            return "", "403"
+        return get_user_projects(user_id)
+    elif request.method == "POST":
+        if user_id == None:
+            return "", "403"
+        content_type = request.headers.get("Content-Type")
+        if content_type == "application/json":
+            json = request.json
+            project = Project(
+                json["name"],
+                json["path"],
+                json["saved"],
+                json["changes"],
+            )
+            add_project(project, user_id)
+            return "", "204"
+        else:
+            return "Content-Type not supported!"
 
 
 # @app.route("/channels")

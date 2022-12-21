@@ -11,6 +11,14 @@ User = lambda username, email, projects: {
     "projects": projects,
 }
 
+# Creates project dictionary
+Project = lambda name, path, saved, changes: {
+    "name": name,
+    "path": path,
+    "saved": saved,
+    "changes": changes,
+}
+
 # Load env variables
 load_dotenv()
 
@@ -67,7 +75,17 @@ def get_user_by_id(user_id):
 # Get user projects
 def get_user_projects(user_id):
     cursor = users_collection.find_one(ObjectId(user_id))
-    projects = dumps(cursor["projects"], indent=4)
+    if cursor == None:
+        return None
+    projects = []
+    for project in cursor["projects"]:
+        project_dict = Project(
+            project["name"],
+            project["path"],
+            project["saved"],
+            project["changes"],
+        )
+        projects.append(project_dict)
     return projects
 
 
@@ -78,3 +96,34 @@ def delete_all_users():
     for user in users:
         user_id = user["_id"]
         users_collection.delete_one({"_id": ObjectId(user_id)})
+
+
+# Returns true if project exists in db
+def project_exists(user_projects, in_project):
+    for project in user_projects:
+        if project["path"] == in_project["path"]:
+            return True
+    return False
+
+
+# Add project in db
+def add_project(project, user_id):
+    user_projects = get_user_projects(user_id)
+    # If user has no projects
+    if user_projects == None:
+        users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {
+                "$set": {"projects": project},
+            },
+        )
+    # Append to existing projects list
+    else:
+        if not project_exists(user_projects, project):
+            user_projects.append(project)
+        users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {
+                "$set": {"projects": user_projects},
+            },
+        )
