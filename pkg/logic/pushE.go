@@ -26,37 +26,41 @@ func ExecutePush() {
 		return
 	}
 
-	// Read commits
-	commits := GetCommits()
-	if len(commits) == 0 {
+	// Read committedProject
+	// TODO: better way to do this
+	committedProject := GetCommittedProject()
+	if committedProject.Name == "" {
 		fmt.Println("Everything up-to-date")
 		return
 	}
 
-	// // Append tracked files to db
-	// trackedFiles, err := GetTracked()
-	// if err != nil {
-	// 	log.Fatal(err.Error())
-	// }
-
 	// Get current user id
 	userId := GetCurrentUser().ID.Hex()
-	currentUser := requests.GetUser(userId)
 
-	// Get current user projects
-	currentUserProjects := currentUser.Projects
-	for _, commit := range commits {
-		for _, file := range commit.Files {
-			project := types.Project{
-				File:    file,
-				Commits: nil,
-			}
-			currentUserProjects = append(currentUserProjects, project)
-		}
+	// if project exists, prepend changes; else, add project to db
+	if projectExistsInDb(committedProject.Path, userId) {
+		// Get project changes from db
+		project, _ := requests.GetProjectByPath(committedProject.Path, userId)
+		projectChanges := project.Changes
+
+		// Prepend incoming changes
+		updatedChanges := append(committedProject.Changes, projectChanges...)
+
+		// Update changes
+		updateProjectChanges(project.Name, updatedChanges, userId)
+	} else {
+		// Add project to db
+		addProjectToDb(committedProject, userId)
 	}
 
-	// Push commits up local branch
-	// pushToBranch(commits)
+	// userProjects := requests.GetProjects(userId)
+	// for _, userProject := range userProjects {
+	// 	if userProject.Path == commits.Path {
+	// 		// Get list of changes from db
+	// 		// Prepend to list of changes
+	// 		userProject.Changes = append(commits.Changes, userProject.Changes...)
+	// 	}
+	// }
 
 	// Clear commits
 	if err := os.Truncate("./.daw/commits.json", 0); err != nil {
@@ -64,11 +68,19 @@ func ExecutePush() {
 	}
 }
 
-// func pushToBranch(commits []types.Commit) {
-// 	// Update commits
-// 	db.UpdateCommits(commits)
-// }
+// Makes request to update project changes
+func updateProjectChanges(projectName string, projectChanges []types.Change, userId string) {
+	// Send put request with updated changes list
+	requests.UpdateChanges(projectName, projectChanges, userId)
+}
 
+// Adds project to db
+func addProjectToDb(commits types.Project, userId string) {
+	// Update commits
+	requests.AddProject(commits, userId)
+}
+
+// Returns the current user's credentials
 func GetCurrentUser() types.User {
 	var user types.User
 
@@ -83,4 +95,10 @@ func GetCurrentUser() types.User {
 	json.Unmarshal(byteValue, &user)
 
 	return user
+}
+
+// Returns true if project exists in db
+func projectExistsInDb(projectPath string, userId string) bool {
+	_, exists := requests.GetProjectByPath(projectPath, userId)
+	return exists
 }

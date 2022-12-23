@@ -6,7 +6,7 @@ from bson.json_util import dumps
 
 app = Flask(__name__)
 
-
+# User methods
 @app.route("/user", methods=["GET", "POST"])
 def user():
     # Get user from db
@@ -41,20 +41,24 @@ def users():
     return get_users()
 
 
+# !!! FOR TESTING ONLY !!!
+# Delete all users
 @app.route("/delete", methods=["DELETE"])
 def delete():
     delete_all_users()
     return "", "200"
 
 
-# Return all user projects
-@app.route("/projects", methods=["GET", "POST"])
+# Project methods
+@app.route("/projects", methods=["GET", "POST", "PUT"])
 def projects():
     user_id = request.args.get("user_id")
+    # Get all user projects
     if request.method == "GET":
         if user_id == None:
             return "", "403"
         return get_user_projects(user_id)
+    # Add user project
     elif request.method == "POST":
         if user_id == None:
             return "", "403"
@@ -71,6 +75,17 @@ def projects():
             return "", "204"
         else:
             return "Content-Type not supported!"
+    # Update project changes
+    elif request.method == "PUT":
+        project_name = request.args.get("project_name")
+        if user_id == None or project_name == None:
+            return "", "403"
+        content_type = request.headers.get("Content-Type")
+        if content_type == "application/json":
+            json = request.json
+            changes = json["changes"]
+            update_project_changes(project_name, changes, user_id)
+            return "", "204"
 
 
 # @app.route("/channels")
