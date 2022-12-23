@@ -32,8 +32,8 @@ func ExecuteStatus() {
 		return
 	}
 
-	// Get staged files
-	staged := GetStaged()
+	// Get staged project
+	stagedProject := GetStagedProject()
 
 	// TODO: Build function to parse and display tracked files not staged for commit (red)
 	notStaged := GetNotStaged()
@@ -41,12 +41,11 @@ func ExecuteStatus() {
 	// Get untracked files
 	notTracked := getUntracked()
 
-	if len(staged) != 0 {
+	// TODO: better way to check if staged project exists
+	if stagedProject.Name != "" {
 		// Show changed files to be committed (green)
 		fmt.Println("Changes to be committed:\n  (use \"daw restore --staged <file>...\" to unstage)")
-		for _, file := range staged {
-			fmt.Println(Green + "\t" + file.Name + White)
-		}
+		fmt.Println(Green + "\t" + stagedProject.Name + White)
 		// New line for formatting
 		fmt.Println()
 	} else {
@@ -94,7 +93,7 @@ func getUntracked() []types.File {
 		fileExtension := filepath.Ext(file.Name())
 
 		// Check if file is tracked
-		if fileExtension == ".flp" && !IsTrackedFile(file.Name()) {
+		if fileExtension == ".flp" && !IsTrackedProject(file.Name()) {
 			notTracked = append(notTracked, types.File{Name: file.Name(), Path: path})
 		}
 	}
@@ -120,7 +119,7 @@ func GetNotStaged() []types.File {
 
 	for _, file := range dirFiles {
 		// If file is tracked, not staged and has changes. Append to list
-		if IsTrackedFile(file.Name()) && !IsStagedFile(file.Name()) && isModifiedFile(file.Name()) {
+		if IsTrackedProject(file.Name()) && !IsStagedFile(file.Name()) && isModifiedFile(file.Name()) {
 			notStaged = append(notStaged, types.File{Name: file.Name(), Path: path})
 		}
 	}
@@ -159,19 +158,15 @@ func GetModifiedTime(fileName string) time.Time {
 
 // Returns true if file is staged, false otherwise
 func IsStagedFile(fileName string) bool {
-	stagedFiles := GetStaged()
-
-	for _, file := range stagedFiles {
-		if file.Name == fileName {
-			return true
-		}
+	stagedProject := GetStagedProject()
+	if stagedProject.Name == fileName {
+		return true
 	}
-
 	return false
 }
 
 // Returns true if file is tracked, false otherwise
-func IsTrackedFile(fileName string) bool {
+func IsTrackedProject(fileName string) bool {
 	trackedFiles, err := GetTracked()
 	if err != nil {
 		return false

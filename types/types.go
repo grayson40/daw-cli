@@ -9,10 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Commit struct {
-	Files   []File `bson:"files,omitempty" json:"files"`
+type Change struct {
 	Message string `bson:"message,omitempty" json:"message"`
-	// Branch  string `json:"Branch"`
 }
 
 type File struct {
@@ -22,8 +20,10 @@ type File struct {
 }
 
 type Project struct {
-	File    File     `bson:"file,omitempty" json:"file"`
-	Commits []Commit `bson:"commits,omitempty" json:"commits"`
+	Name    string    `bson:"name,omitempty" json:"name"`
+	Path    string    `bson:"path,omitempty" json:"path"`
+	Saved   time.Time `bson:"saved,omitempty" json:"saved"`
+	Changes []Change  `bson:"changes,omitempty" json:"changes"`
 }
 
 type User struct {
