@@ -127,3 +127,14 @@ def add_project(project, user_id):
                 "$set": {"projects": user_projects},
             },
         )
+
+
+# Update project changes
+def update_project_changes(project_name, changes, user_id):
+    users_collection.update_one(
+        {
+            "_id": ObjectId(user_id),
+            "projects.name": project_name,
+        },
+        {"$set": {"projects.$.changes": changes}},
+    )
