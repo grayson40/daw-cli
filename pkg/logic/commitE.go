@@ -55,7 +55,7 @@ func ExecuteCommit(message string) {
 
 	// Get changes and append
 	changes := committedProject.Changes
-	changes = append(changes, change)
+	changes = append([]types.Change{change}, changes...)
 	stagedProject.Changes = changes
 
 	// TODO: add commit(s) to designated project files
