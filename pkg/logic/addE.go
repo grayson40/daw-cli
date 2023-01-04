@@ -29,146 +29,112 @@ func ExecuteAdd(input []string) {
 		return
 	}
 
-	// Get staged files
-	stagedFiles := GetStaged()
+	// Throw error if more than one file is inputted for staging
+	if len(input) > 1 {
+		fmt.Println("fatal: only one project file can be added at a time")
+		return
+	}
 
-	// Get tracked files
-	trackedFiles, err := GetTracked()
+	// Get staged project
+	stagedProject := GetStagedProject()
 
-	// Add all local dir files to staging area
-	if input[0] == "." {
-		// Get path
-		path, err := os.Getwd()
-		if err != nil {
-			panic(err)
-		}
+	// Get tracked projects
+	trackedProjects, err := GetTracked()
 
-		// Read all files in local dir
-		dirFiles, err := ioutil.ReadDir(path)
-		if err != nil {
-			panic(err)
-		}
+	// Get project file input
+	projectFile := input[0]
 
-		// Iterate over local dir files
-		for _, file := range dirFiles {
-			// Get file name
-			name := file.Name()
+	// Get file name
+	name := projectFile
 
-			// Only want project files
-			splitString := strings.Split(name, ".")
-			if splitString[1] != "flp" {
-				continue
-			}
+	// Only want project files
+	splitString := strings.Split(name, ".")
+	if splitString[1] != "flp" {
+		fmt.Printf("fatal: pathspec '%s' is not valid for tracking", name)
+		return
+	}
 
-			// Get absolute file path
-			path, err := filepath.Abs(name)
-			if err != nil {
-				log.Fatalf("fatal: pathspec '%s' did not match any files", name)
-				return
-			}
-
-			// Get last modified time
-			modTime := GetModifiedTime(name)
-
-			// Add to tracked if untracked
-			if !IsTrackedFile(name) {
-				trackedFiles = append(trackedFiles, types.File{
-					Name:  name,
-					Path:  path,
-					Saved: modTime,
-				})
-			}
-
-			// Append file for staging
-			if !isStaged(name) {
-				stagedFiles = append(stagedFiles, types.File{
-					Name:  name,
-					Path:  path,
-					Saved: modTime,
-				})
-			}
-		}
+	// Check if file exists
+	if _, err := os.Stat(name); err != nil {
+		fmt.Printf("fatal: pathspec '%s' did not match any files", name)
 	} else {
-		// Iterate over inputted files
-		for _, file := range input {
-			// Get file name
-			name := file
+		// Get absolute file path
+		path, err := filepath.Abs(name)
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
 
-			// Only want project files
-			splitString := strings.Split(name, ".")
-			if splitString[1] != "flp" {
-				fmt.Printf("fatal: pathspec '%s' is not valid for tracking", name)
-				return
-			}
+		// Get last modified time
+		modTime := GetModifiedTime(name)
 
-			// Check if file exists
-			if _, err := os.Stat(name); err != nil {
-				fmt.Printf("fatal: pathspec '%s' did not match any files", name)
-			} else {
-				// Get absolute file path
-				path, err := filepath.Abs(name)
-				if err != nil {
-					log.Fatalf(err.Error())
-				}
+		// Add to tracked if untracked
+		if !IsTrackedProject(projectFile) {
+			trackedProjects = append(trackedProjects, types.File{
+				Name:  name,
+				Path:  path,
+				Saved: modTime,
+			})
+		}
 
-				// Get last modified time
-				modTime := GetModifiedTime(name)
-
-				// Add to tracked if untracked
-				if !IsTrackedFile(file) {
-					trackedFiles = append(trackedFiles, types.File{
-						Name:  name,
-						Path:  path,
-						Saved: modTime,
-					})
-				}
-
-				// Append file for staging
-				if !isStaged(name) {
-					stagedFiles = append(stagedFiles, types.File{
-						Name:  name,
-						Path:  path,
-						Saved: modTime,
-					})
-				}
+		// Append file for staging
+		if !isStaged(path) {
+			var changes []types.Change
+			stagedProject = types.Project{
+				Name:    name,
+				Path:    path,
+				Saved:   modTime,
+				Changes: changes,
 			}
 		}
 	}
 
 	// Write to tracked json
-	err = writeTracked(trackedFiles)
+	err = writeTracked(trackedProjects)
 	if err != nil {
 		panic(err)
 	}
 
 	// Write to staged json
-	err = writeStaged(stagedFiles)
+	err = writeStaged(stagedProject)
 	if err != nil {
 		panic(err)
 	}
+
+	// Add to user project files if dne
+	// userProjectFiles := requests.GetProjects(currentUserId)
+	// userStagedFiles := GetStaged()
+	// for _, stagedFile := range userStagedFiles {
+	// 	if !projectFileInDb(userProjectFiles, stagedFile.Name) {
+	// 		project := types.Project{
+	// 			File:    stagedFile,
+	// 			Commits: nil,
+	// 		}
+	// 		userProjectFiles = append(userProjectFiles, project)
+	// 	}
+	// }
+
+	// Write updated project files to db
+	// currentUserId := GetCurrentUser().ID.Hex()
+	// requests.AddProject(stagedFiles, currentUserId)
 }
 
 // Returns true if file is already staged
-func isStaged(fileName string) bool {
-	stagedFiles := GetStaged()
-
-	for _, file := range stagedFiles {
-		if file.Name == fileName {
-			return true
-		}
+func isStaged(filepath string) bool {
+	stagedProject := GetStagedProject()
+	if stagedProject.Path == filepath {
+		return true
 	}
-
 	return false
 }
 
 // Writes commit array to json file, returns err
-func writeStaged(files []types.File) error {
-	file, err2 := json.MarshalIndent(files, "", "\t")
-	if err2 != nil {
-		panic(err2)
+func writeStaged(stagedProject types.Project) error {
+	file, err := json.MarshalIndent(stagedProject, "", "\t")
+	if err != nil {
+		panic(err)
 	}
 
-	err := ioutil.WriteFile("./.daw/staged.json", file, 0644)
+	err = ioutil.WriteFile("./.daw/staged.json", file, 0644)
 
 	return err
 }
@@ -184,45 +150,3 @@ func writeTracked(files []types.File) error {
 
 	return writeErr
 }
-
-// func runPythonScript() {
-// 	var cmd *exec.Cmd
-
-// 	if len(input) == 1 {
-// 		// Execute python script
-// 		cmd = exec.Command("python", "C:/Users/grays/src/repos/daw/pkg/scripts/parse-fl.py", "--input", input[0])
-// 	} else {
-// 		// Format file name args
-// 		var files = strings.Join(input, " ")
-
-// 		// Execute python script
-// 		cmd = exec.Command("python", "C:/Users/grays/src/repos/daw/pkg/scripts/parse-fl.py", "--input", files)
-// 	}
-
-// 	stdout, err := cmd.StdoutPipe()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	stderr, err := cmd.StderrPipe()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	err = cmd.Start()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	go copyOutput(stdout)
-// 	go copyOutput(stderr)
-
-// 	cmd.Wait()
-// }
-
-// func copyOutput(r io.Reader) {
-// 	scanner := bufio.NewScanner(r)
-// 	for scanner.Scan() {
-// 		fmt.Println(scanner.Text())
-// 	}
-// }

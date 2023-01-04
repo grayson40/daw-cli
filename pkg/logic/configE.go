@@ -10,7 +10,8 @@ import (
 	"log"
 	"os"
 
-	db "github.com/grayson40/daw/pkg/db"
+	req "github.com/grayson40/daw/pkg/requests"
+	"github.com/grayson40/daw/types"
 )
 
 func ExecuteConfig(username string, email string) {
@@ -27,18 +28,46 @@ func ExecuteConfig(username string, email string) {
 	}
 
 	// Create user
-	user := db.CreateUser(username, email)
+	user := createUser(email, username)
 
-	// Add user to db
-	err := db.AddUser(user)
-	if err != nil {
-		log.Fatal(err)
+	// Post user to db if not in there, get ID
+	if !userExists(user) {
+		user.ID = req.AddUser(user)
+	} else {
+		user.ID = req.GetUserIdByEmail(email)
 	}
 
+	// Add credentials to json file
+	writeUserCredentials(user)
+}
+
+// Writes user credentials to json
+func writeUserCredentials(user types.User) {
 	// Add credentials to json file
 	file, err := json.MarshalIndent(user, "", "\t")
 	if err != nil {
 		log.Fatal(err)
 	}
 	ioutil.WriteFile("./.daw/credentials.json", file, 0644)
+}
+
+// Returns user type
+func createUser(email string, username string) types.User {
+	return types.User{
+		Email:    email,
+		UserName: username,
+		Projects: []types.Project{},
+	}
+}
+
+// Returns true if user exists in db
+func userExists(inUser types.User) bool {
+	// See if user already exists
+	users := req.GetUsers()
+	for _, user := range users {
+		if user.Email == inUser.Email && user.UserName == inUser.UserName {
+			return true
+		}
+	}
+	return false
 }

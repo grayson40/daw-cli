@@ -4,10 +4,12 @@ Copyright © 2022 Grayson Crozier <grayson40@gmail.com>
 package daw
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 
-	"github.com/grayson40/daw/pkg/db"
+	"github.com/grayson40/daw/pkg/requests"
 	"github.com/grayson40/daw/types"
 )
 
@@ -24,15 +26,41 @@ func ExecutePush() {
 		return
 	}
 
-	// Read commits
-	commits := GetCommits()
-	if len(commits) == 0 {
+	// Read committedProject
+	// TODO: better way to do this
+	committedProject := GetCommittedProject()
+	if committedProject.Name == "" {
 		fmt.Println("Everything up-to-date")
 		return
 	}
 
-	// Push commits up local branch
-	pushToBranch(commits)
+	// Get current user id
+	userId := GetCurrentUser().ID.Hex()
+
+	// if project exists, prepend changes; else, add project to db
+	if projectExistsInDb(committedProject.Path, userId) {
+		// Get project changes from db
+		project, _ := requests.GetProjectByPath(committedProject.Path, userId)
+		projectChanges := project.Changes
+
+		// Prepend incoming changes
+		updatedChanges := append(committedProject.Changes, projectChanges...)
+
+		// Update changes
+		updateProjectChanges(project.Name, updatedChanges, userId)
+	} else {
+		// Add project to db
+		addProjectToDb(committedProject, userId)
+	}
+
+	// userProjects := requests.GetProjects(userId)
+	// for _, userProject := range userProjects {
+	// 	if userProject.Path == commits.Path {
+	// 		// Get list of changes from db
+	// 		// Prepend to list of changes
+	// 		userProject.Changes = append(commits.Changes, userProject.Changes...)
+	// 	}
+	// }
 
 	// Clear commits
 	if err := os.Truncate("./.daw/commits.json", 0); err != nil {
@@ -40,7 +68,37 @@ func ExecutePush() {
 	}
 }
 
-func pushToBranch(commits []types.Commit) {
+// Makes request to update project changes
+func updateProjectChanges(projectName string, projectChanges []types.Change, userId string) {
+	// Send put request with updated changes list
+	requests.UpdateChanges(projectName, projectChanges, userId)
+}
+
+// Adds project to db
+func addProjectToDb(commits types.Project, userId string) {
 	// Update commits
-	db.UpdateCommits(commits)
+	requests.AddProject(commits, userId)
+}
+
+// Returns the current user's credentials
+func GetCurrentUser() types.User {
+	var user types.User
+
+	jsonFile, err := os.Open("./.daw/credentials.json")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &user)
+
+	return user
+}
+
+// Returns true if project exists in db
+func projectExistsInDb(projectPath string, userId string) bool {
+	_, exists := requests.GetProjectByPath(projectPath, userId)
+	return exists
 }

@@ -13,12 +13,14 @@ import (
 )
 
 // Creates and returns a new commit
-func newCommit(files []types.File, message string) types.Commit {
-	c := types.Commit{
-		Files:   files,
+func newCommit(projects []types.Project, message string) []types.Project {
+	c := types.Change{
 		Message: message,
 	}
-	return c
+	for _, project := range projects {
+		project.Changes = append(project.Changes, c)
+	}
+	return projects
 }
 
 // Executes the commiting process
@@ -35,21 +37,54 @@ func ExecuteCommit(message string) {
 		return
 	}
 
-	// Read staged staged files
-	stagedFiles := GetStaged()
+	// Create change type
+	change := types.Change{Message: message}
 
-	if len(stagedFiles) == 0 {
-		fmt.Println("no changes added to commit (use \"daw add\")")
+	// Get currently staged project
+	stagedProject := GetStagedProject()
+
+	// Throw error if no project staged
+	// TODO: find better way to do this
+	if stagedProject.Name == "" {
+		fmt.Println("error: no changes added to commit")
 		return
 	}
 
 	// Read commit stack
-	commits := GetCommits()
+	committedProject := GetCommittedProject()
+
+	// Get changes and append
+	changes := committedProject.Changes
+	changes = append([]types.Change{change}, changes...)
+	stagedProject.Changes = changes
+
+	// TODO: add commit(s) to designated project files
+	// TODO: get project(s) & commits of project(s)
+	// TODO: append commit(s) to designated project file
+	// So commits.json will be a list of updated project files
+
+	// Get current user projects
+	// currentUserId := GetCurrentUser().ID.Hex()
+	// currentUserProjects := requests.GetProjects(currentUserId)
+
+	// if len(currentUserProjects) == 0 {
+	// } else {
+	// 	// Search for project and append changes to changes list
+	// }
+
+	// for _, stagedProject := range stagedProjects {
+	// 	if !fileExists(currentUserProjects, stagedProject) {
+	// 		project := requests.GetProjectByName(stagedProject.Name, currentUserId)
+	// 		// Update project commits
+	// 		for _, commit := range committedProjects {
+	// 			project.Commits = append(stagedProject.Commits, commit.Commits...)
+	// 		}
+	// 		requests.UpdateProjectByName(project, currentUserId)
+	// 	}
+	// }
 
 	// Create new commit and write to commit stack
-	commit := newCommit(stagedFiles, message)
-	commits = append([]types.Commit{commit}, commits...)
-	writeErr := writeCommit(commits)
+	writeErr := writeCommit(stagedProject)
 	if writeErr != nil {
 		panic(writeErr)
 	}
@@ -61,8 +96,8 @@ func ExecuteCommit(message string) {
 }
 
 // Reads contents of json staged files and returns array of staged files
-func GetStaged() []types.File {
-	var files []types.File
+func GetStagedProject() types.Project {
+	var project types.Project
 
 	jsonFile, err := os.Open("./.daw/staged.json")
 	if err != nil {
@@ -72,14 +107,17 @@ func GetStaged() []types.File {
 	defer jsonFile.Close()
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &files)
+	if byteValue == nil {
+		return types.Project{}
+	}
 
-	return files
+	json.Unmarshal(byteValue, &project)
+	return project
 }
 
 // Reads contents of json commit file and returns array of commits
-func GetCommits() []types.Commit {
-	var commits []types.Commit
+func GetCommittedProject() types.Project {
+	var project types.Project
 
 	jsonFile, err := os.Open("./.daw/commits.json")
 	if err != nil {
@@ -89,19 +127,29 @@ func GetCommits() []types.Commit {
 	defer jsonFile.Close()
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &commits)
+	json.Unmarshal(byteValue, &project)
 
-	return commits
+	return project
 }
 
 // Writes commit array to json file, returns err
-func writeCommit(commits []types.Commit) error {
-	file, err2 := json.MarshalIndent(commits, "", "\t")
-	if err2 != nil {
-		panic(err2)
+func writeCommit(committedProject types.Project) error {
+	file, err := json.MarshalIndent(committedProject, "", "\t")
+	if err != nil {
+		panic(err)
 	}
 
-	err := ioutil.WriteFile("./.daw/commits.json", file, 0644)
+	err = ioutil.WriteFile("./.daw/commits.json", file, 0644)
 
 	return err
+}
+
+// Returns true if project file exists in db
+func fileExists(currentUserProjects []types.Project, inProject types.Project) bool {
+	for _, currentUserProject := range currentUserProjects {
+		if inProject.Path == currentUserProject.Path {
+			return true
+		}
+	}
+	return false
 }

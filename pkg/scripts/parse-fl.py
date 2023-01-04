@@ -1,59 +1,40 @@
 # Copyright © 2022 Grayson Crozier <grayson40@gmail.com>
-
-import argparse
 import pyflp as fl
 import os
-
+import argparse
+from channels import *
+from mixer import *
+from patterns import *
+# from plugins import *
 
 def main():
+    # Parser obj
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input', required=True)
-    args = parser.parse_args()
+    parser.add_argument('--input', type=str)
+    parser.parse_args()
+    print(parser.input)
 
-    # Open staged write file
-    staged = open("staged.txt", "w")
+    # # Filename 
+    # file = "like-what.flp"
 
-    if args.input == ".":
-        files = []
-        # Iterate over all project files in dir
-        for file in os.listdir('./'):
-            if file.split('.')[1] != 'flp':
-                continue
-            # Append filename
-            files.append(file)
+    # # Open and parse fl project
+    # project = fl.parse(file)
 
+    # # Make dir for json data
+    # if not os.path.exists("./project"):
+    #     os.mkdir("project")
 
-        for file in files:
-            # Write filename to staged file
-            staged.write(f'{file}\n')
+    # # Get channels
+    # getChannels(project)
 
-            # # Parse fl project
-            # project = fl.parse(file)
-            # print(f'\nProject file: {file}\n\nChannels:')
+    # # Get patterns
+    # getPatterns(project)
 
-            # # Grab channels
-            # channels = project.channels
-            # for channel in channels:
-            #     print(channel.name)
-
-        # Close staged write file
-        staged.close()
-
-    else:
-        # Get input file
-        input_file = args.input
-
-        # Write filename to staged file
-        staged.write(f'{input_file}\n')
-
-        # # Parse fl project
-        # project = fl.parse(input_file)
-        # print(f'Project file: {input_file}\n\nChannels:')
-
-        # # Grab channels
-        # channels = project.channels
-        # for channel in channels:
-        #     print(channel.name)
+    # # Get plugins
+    # getPlugins(project)
+    
+    # # Get mixer
+    # getMixer(project)
 
 
 if __name__ == "__main__":

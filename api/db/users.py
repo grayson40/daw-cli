@@ -124,7 +124,7 @@ def add_project(project, user_id):
         users_collection.update_one(
             {"_id": ObjectId(user_id)},
             {
-                "$set": {"projects": user_projects}
+                "$set": {"projects": user_projects},
             },
         )
 
