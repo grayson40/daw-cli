@@ -2,4 +2,4 @@
 
 # testing
 /projects
-local.env
+.env
