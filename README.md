@@ -11,7 +11,13 @@ Follow these instructions to build and install daw version control
 <details>
 	<summary>Go</summary>
 
-This tool is written and built with Golang. Download the latest version of Golang [here.](https://go.dev/doc/install)
+The CLI client is written and built with Golang. Download the latest version of Golang [here.](https://go.dev/doc/install)
+</details>
+
+<details>
+	<summary>Python</summary>
+
+Python is used to handle API requests and interface with the database. Download the latest version of Python [here.](https://www.python.org/downloads/)
 </details>
 
 <details>
@@ -32,13 +38,28 @@ Git is used to manage the codebase. Download the latest version of Git [here.](h
     ```
     Working off the master branch will ensure that you're using the latest released version of Daw.
 
-2. Build and install the module.
+2. Build and install the CLI module.
     ```
     go build
     go install
     ```
-    
-3. You have now successfully installed the daw version control tool.
+
+3. Setup python virtual environment. Download dependencies.
+    ```
+    cd api
+    pip install pipenv
+    pipenv sync
+    ```
+    **The next set of commands need to be executed in a unix shell (i.e. git bash).**
+
+4. Spin up flask server to handle API requests.
+    ```
+    cd api
+    chmod +x bootstrap.sh
+    ./bootstrap.sh
+    ```
+
+5. You are now ready to use the daw version control tool.
 
 ## Available Scripts
 
