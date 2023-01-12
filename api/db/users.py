@@ -32,6 +32,7 @@ db = client.daw
 # Get users collection
 users_collection = db.users
 
+
 # Returns list of users in db
 def get_users():
     # Get users
@@ -130,11 +131,13 @@ def add_project(project, user_id):
 
 
 # Update project changes
-def update_project_changes(project_name, changes, user_id):
+def update_project_changes(project_name, changes, saved_time, user_id):
+    print(saved_time)
+    # Update changes and saved time
     users_collection.update_one(
         {
             "_id": ObjectId(user_id),
             "projects.name": project_name,
         },
-        {"$set": {"projects.$.changes": changes}},
+        {"$set": {"projects.$.changes": changes, "projects.$.saved": saved_time}},
     )
