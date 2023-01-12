@@ -84,7 +84,8 @@ def projects():
         if content_type == "application/json":
             json = request.json
             changes = json["changes"]
-            update_project_changes(project_name, changes, user_id)
+            saved_time = json["saved"]
+            update_project_changes(project_name, changes, saved_time, user_id)
             return "", "204"
 
 

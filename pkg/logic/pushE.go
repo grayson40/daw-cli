@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/grayson40/daw/pkg/requests"
 	"github.com/grayson40/daw/types"
@@ -46,8 +47,11 @@ func ExecutePush() {
 		// Prepend incoming changes
 		updatedChanges := append(committedProject.Changes, projectChanges...)
 
+		// Get latest savedTime
+		modTime := GetModifiedTime(project.Name)
+
 		// Update changes
-		updateProjectChanges(project.Name, updatedChanges, userId)
+		updateProjectChanges(project.Name, updatedChanges, modTime, userId)
 	} else {
 		// Add project to db
 		addProjectToDb(committedProject, userId)
@@ -69,9 +73,9 @@ func ExecutePush() {
 }
 
 // Makes request to update project changes
-func updateProjectChanges(projectName string, projectChanges []types.Change, userId string) {
+func updateProjectChanges(projectName string, projectChanges []types.Change, modTime time.Time, userId string) {
 	// Send put request with updated changes list
-	requests.UpdateChanges(projectName, projectChanges, userId)
+	requests.UpdateChanges(projectName, projectChanges, modTime, userId)
 }
 
 // Adds project to db

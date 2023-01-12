@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/grayson40/daw/types"
 )
@@ -51,10 +52,11 @@ func GetProjects(userId string) []types.Project {
 }
 
 // PUT request to update project changes in db
-func UpdateChanges(projectName string, changes []types.Change, userId string) {
+func UpdateChanges(projectName string, changes []types.Change, modTime time.Time, userId string) {
 	// Encode the data
 	postBody, _ := json.Marshal(map[string]interface{}{
 		"changes": changes,
+		"saved":   modTime,
 	})
 	responseBody := bytes.NewBuffer(postBody)
 
