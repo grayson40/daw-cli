@@ -4,7 +4,7 @@ Copyright © 2022 Grayson Crozier <grayson40@gmail.com>
 package cmd
 
 import (
-	commit "github.com/grayson40/daw/pkg/logic"
+	handler "github.com/grayson40/daw/pkg/handlers"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +15,7 @@ var commitCmd = &cobra.Command{
 	Long:  `This command will commit staged project file(s) with a specified message.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		commit.ExecuteCommit(args[0])
+		handler.ExecuteCommit(args[0])
 	},
 }
 

@@ -4,7 +4,7 @@ Copyright © 2022 Grayson Crozier <grayson40@gmail.com>
 package cmd
 
 import (
-	add "github.com/grayson40/daw/pkg/logic"
+	handler "github.com/grayson40/daw/pkg/handlers"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +15,7 @@ var addCmd = &cobra.Command{
 	Long:  `This command will add the project file(s) to be tracked.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		add.ExecuteAdd(args)
+		handler.ExecuteAdd(args)
 	},
 }
 

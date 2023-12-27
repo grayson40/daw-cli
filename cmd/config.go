@@ -6,7 +6,7 @@ package cmd
 import (
 	"log"
 
-	config "github.com/grayson40/daw/pkg/logic"
+	handler "github.com/grayson40/daw/pkg/handlers"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +31,7 @@ var configCmd = &cobra.Command{
 			log.Fatal("Error: flag needs an argument: --email")
 		}
 
-		config.ExecuteConfig(username, email)
+		handler.ExecuteConfig(username, email)
 	},
 }
 
@@ -42,8 +42,8 @@ func init() {
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	configCmd.PersistentFlags().String("email", "", "User email")
-	configCmd.PersistentFlags().String("username", "", "User name")
+	configCmd.PersistentFlags().String("email", "e", "User email")
+	configCmd.PersistentFlags().String("username", "u", "User name")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:

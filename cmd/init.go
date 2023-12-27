@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	initialize "github.com/grayson40/daw/pkg/logic"
+	handler "github.com/grayson40/daw/pkg/handlers"
 	"github.com/spf13/cobra"
 )
 
@@ -22,10 +22,10 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		if initialize.IsInitialized() {
+		if handler.IsInitialized() {
 			fmt.Println("Reinitialized existing Daw repository in " + path + "\\.daw")
 		} else {
-			initialize.ExecuteInit()
+			handler.ExecuteInit()
 		}
 	},
 }

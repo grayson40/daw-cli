@@ -4,7 +4,7 @@ Copyright © 2022 Grayson Crozier <grayson40@gmail.com>
 package cmd
 
 import (
-	status "github.com/grayson40/daw/pkg/logic"
+	handler "github.com/grayson40/daw/pkg/handlers"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +14,7 @@ var statusCmd = &cobra.Command{
 	Short: "Show the working tree status",
 	Long:  `Displays paths that have differences between the index file and the current HEAD commit`,
 	Run: func(cmd *cobra.Command, args []string) {
-		status.ExecuteStatus()
+		handler.ExecuteStatus()
 	},
 }
 

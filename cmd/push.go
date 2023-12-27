@@ -4,7 +4,7 @@ Copyright © 2022 Grayson Crozier <graysoncrozier40@gmail.com>
 package cmd
 
 import (
-	push "github.com/grayson40/daw/pkg/logic"
+	handler "github.com/grayson40/daw/pkg/handlers"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +14,7 @@ var pushCmd = &cobra.Command{
 	Short: "Push staged commits and update local ref",
 	Long:  `This command will push the staged commits up the current ref`,
 	Run: func(cmd *cobra.Command, args []string) {
-		push.ExecutePush()
+		handler.ExecutePush()
 	},
 }
 
