@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 
+	io "github.com/grayson40/daw/pkg/io"
 	initialize "github.com/grayson40/daw/pkg/logic"
 	"github.com/spf13/cobra"
 )
@@ -22,7 +23,7 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		if initialize.IsInitialized() {
+		if io.IsInitialized() {
 			fmt.Println("Reinitialized existing Daw repository in " + path + "\\.daw")
 		} else {
 			initialize.ExecuteInit()

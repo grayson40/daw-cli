@@ -84,6 +84,7 @@ func GetUsers() []types.User {
 	return users
 }
 
+// GET request to get user id by email
 func GetUserIdByEmail(email string) primitive.ObjectID {
 	// Response
 	resp, err := http.Get(BASE_URL + "/user?email=" + email)

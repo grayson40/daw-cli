@@ -11,23 +11,20 @@ import (
 	"path/filepath"
 	"time"
 
+	colors "github.com/grayson40/daw/constants"
+	io "github.com/grayson40/daw/pkg/io"
 	"github.com/grayson40/daw/types"
 )
 
-// Colors
-const Red = "\033[31m"
-const Green = "\033[32m"
-const White = "\033[97m"
-
 func ExecuteStatus() {
 	// Throw error if not an initialized repo
-	if !IsInitialized() {
+	if !io.IsInitialized() {
 		fmt.Println("fatal: not a daw repository (or any of the parent directories): .daw")
 		return
 	}
 
 	// Throw error if user credentials not configured
-	if _, err := os.Stat("./.daw/credentials.json"); err != nil {
+	if !UserConfigured() {
 		fmt.Println("fatal: user credentials not configured\n  (use \"daw config --username <username> --email <email>\" to configure user credentials)")
 		return
 	}
@@ -45,7 +42,7 @@ func ExecuteStatus() {
 	if stagedProject.Name != "" {
 		// Show changed files to be committed (green)
 		fmt.Println("Changes to be committed:\n  (use \"daw restore --staged <file>...\" to unstage)")
-		fmt.Println(Green + "\t" + stagedProject.Name + White)
+		fmt.Println(colors.Green + "\t" + stagedProject.Name + colors.White)
 		// New line for formatting
 		fmt.Println()
 	} else {
@@ -57,7 +54,7 @@ func ExecuteStatus() {
 	if len(notStaged) != 0 {
 		fmt.Print("Changes not staged for commit:\n  (use \"daw add <file>...\" to update what will be committed)\n  (use \"daw restore <file>...\" to discard changes in working directory)\n")
 		for _, file := range notStaged {
-			fmt.Println("\t" + Red + file.Name + White)
+			fmt.Println("\t" + colors.Red + file.Name + colors.White)
 		}
 		fmt.Println()
 	}
@@ -66,7 +63,7 @@ func ExecuteStatus() {
 	if len(notTracked) != 0 {
 		fmt.Println("Untracked files:\n  (use \"daw add <file>...\" to include in what will be committed)")
 		for _, file := range notTracked {
-			fmt.Println("\t" + Red + file.Name + White)
+			fmt.Println("\t" + colors.Red + file.Name + colors.White)
 		}
 		fmt.Println()
 	}

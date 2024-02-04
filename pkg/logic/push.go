@@ -6,23 +6,23 @@ package daw
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"time"
 
-	"github.com/grayson40/daw/pkg/requests"
+	constants "github.com/grayson40/daw/constants"
+	io "github.com/grayson40/daw/pkg/io"
+	api "github.com/grayson40/daw/pkg/requests"
 	"github.com/grayson40/daw/types"
 )
 
 func ExecutePush() {
 	// Throw error if not an initialized repo
-	if !IsInitialized() {
+	if !io.IsInitialized() {
 		fmt.Println("fatal: not a daw repository (or any of the parent directories): .daw")
 		return
 	}
 
 	// Throw error if user credentials not configured
-	if _, err := os.Stat("./.daw/credentials.json"); err != nil {
+	if !UserConfigured() {
 		fmt.Println("fatal: user credentials not configured\n  (use \"daw config --username <username> --email <email>\" to configure user credentials)")
 		return
 	}
@@ -41,7 +41,7 @@ func ExecutePush() {
 	// if project exists, prepend changes; else, add project to db
 	if projectExistsInDb(committedProject.Path, userId) {
 		// Get project changes from db
-		project, _ := requests.GetProjectByPath(committedProject.Path, userId)
+		project, _ := api.GetProjectByPath(committedProject.Path, userId)
 		projectChanges := project.Changes
 
 		// Prepend incoming changes
@@ -67,42 +67,36 @@ func ExecutePush() {
 	// }
 
 	// Clear commits
-	if err := os.Truncate("./.daw/commits.json", 0); err != nil {
-		panic(err)
-	}
+	clearCommits()
+}
+
+// Clears commits
+func clearCommits() {
+	io.ClearFile(constants.CommitsPath)
 }
 
 // Makes request to update project changes
 func updateProjectChanges(projectName string, projectChanges []types.Change, modTime time.Time, userId string) {
-	// Send put request with updated changes list
-	requests.UpdateChanges(projectName, projectChanges, modTime, userId)
+	api.UpdateChanges(projectName, projectChanges, modTime, userId)
 }
 
 // Adds project to db
 func addProjectToDb(commits types.Project, userId string) {
-	// Update commits
-	requests.AddProject(commits, userId)
+	api.AddProject(commits, userId)
 }
 
 // Returns the current user's credentials
 func GetCurrentUser() types.User {
 	var user types.User
 
-	jsonFile, err := os.Open("./.daw/credentials.json")
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	defer jsonFile.Close()
-
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	json.Unmarshal(byteValue, &user)
+	userBytes := io.ReadFile(constants.CredentialsPath)
+	json.Unmarshal(userBytes, &user)
 
 	return user
 }
 
 // Returns true if project exists in db
 func projectExistsInDb(projectPath string, userId string) bool {
-	_, exists := requests.GetProjectByPath(projectPath, userId)
+	_, exists := api.GetProjectByPath(projectPath, userId)
 	return exists
 }

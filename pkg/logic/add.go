@@ -6,25 +6,26 @@ package daw
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	constants "github.com/grayson40/daw/constants"
+	io "github.com/grayson40/daw/pkg/io"
 	"github.com/grayson40/daw/types"
 )
 
 // Write input files to staged file
 func ExecuteAdd(input []string) {
 	// Throw error if not an initialized repo
-	if !IsInitialized() {
+	if !io.IsInitialized() {
 		fmt.Println("fatal: not a daw repository (or any of the parent directories): .daw")
 		return
 	}
 
 	// Throw error if user credentials not configured
-	if _, err := os.Stat("./.daw/info/user.json"); err != nil {
+	if !UserConfigured() {
 		fmt.Println("fatal: user credentials not configured\n  (use \"daw config --username <username> --email <email>\" to configure user credentials)")
 		return
 	}
@@ -105,7 +106,7 @@ func writeStaged(stagedProject types.Project) error {
 		panic(err)
 	}
 
-	err = ioutil.WriteFile("./.daw/objects/staged.json", file, 0644)
+	io.WriteToFile(constants.StagedPath, file)
 
 	return err
 }

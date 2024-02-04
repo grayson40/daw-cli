@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	constants "github.com/grayson40/daw/constants"
+	io "github.com/grayson40/daw/pkg/io"
 	"github.com/grayson40/daw/types"
 )
 
@@ -26,13 +28,13 @@ func newCommit(projects []types.Project, message string) []types.Project {
 // Executes the commiting process
 func ExecuteCommit(message string) {
 	// Throw error if not an initialized repo
-	if !IsInitialized() {
+	if !io.IsInitialized() {
 		fmt.Println("fatal: not a daw repository (or any of the parent directories): .daw")
 		return
 	}
 
 	// Throw error if user credentials not configured
-	if _, err := os.Stat("./.daw/credentials.json"); err != nil {
+	if !UserConfigured() {
 		fmt.Println("fatal: user credentials not configured\n  (use \"daw config --username <username> --email <email>\" to configure user credentials)")
 		return
 	}
@@ -90,19 +92,14 @@ func ExecuteCommit(message string) {
 	}
 
 	// Clear staged files
-	if err := os.Truncate("./.daw/staged.json", 0); err != nil {
-		panic(err)
-	}
+	io.ClearFile(constants.StagedPath)
 }
 
 // Reads contents of json staged files and returns array of staged files
 func GetStagedProject() types.Project {
 	var project types.Project
 
-	jsonFile, err := os.Open("./.daw/staged.json")
-	if err != nil {
-		fmt.Println(err)
-	}
+	jsonFile := io.OpenFile(constants.StagedPath)
 
 	defer jsonFile.Close()
 
