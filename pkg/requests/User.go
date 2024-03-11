@@ -11,17 +11,17 @@ import (
 	"net/http"
 
 	"github.com/grayson40/daw/types"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // POST request to create user
-func AddUser(user types.User) primitive.ObjectID {
+func AddUser(user types.User) int {
 	// Encode the data
 	postBody, _ := json.Marshal(user)
 	responseBody := bytes.NewBuffer(postBody)
 
 	// Make post request with user data
-	resp, err := http.Post(BASE_URL+"/user", "application/json", responseBody)
+	URL := BASE_URL + "/api/v1/users"
+	resp, err := http.Post(URL, "application/json", responseBody)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -36,10 +36,10 @@ func AddUser(user types.User) primitive.ObjectID {
 	}
 
 	// Decode json response
-	var userID types.UserID
-	json.Unmarshal(body, &userID)
+	var createdID int
+	json.Unmarshal(body, &createdID)
 
-	return userID.ID
+	return createdID
 }
 
 // GET request to get users
@@ -66,7 +66,7 @@ func GetUser(userId string) types.User {
 // GET request to get users
 func GetUsers() []types.User {
 	// Response
-	resp, err := http.Get(BASE_URL + "/users")
+	resp, err := http.Get(BASE_URL + "/api/v1/users")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -85,7 +85,7 @@ func GetUsers() []types.User {
 }
 
 // GET request to get user id by email
-func GetUserIdByEmail(email string) primitive.ObjectID {
+func GetUserIdByEmail(email string) int {
 	// Response
 	resp, err := http.Get(BASE_URL + "/user?email=" + email)
 	if err != nil {
@@ -102,5 +102,5 @@ func GetUserIdByEmail(email string) primitive.ObjectID {
 	var user types.User
 	json.Unmarshal(body, &user)
 
-	return user.ID
+	return int(user.ID)
 }

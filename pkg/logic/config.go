@@ -54,8 +54,7 @@ func writeUserCredentials(user types.User) {
 func constructUser(email string, username string) types.User {
 	return types.User{
 		Email:    email,
-		UserName: username,
-		Projects: []types.Project{},
+		Username: username,
 	}
 }
 
@@ -64,7 +63,7 @@ func userExists(inUser types.User) bool {
 	// See if user already exists
 	users := api.GetUsers()
 	for _, user := range users {
-		if user.Email == inUser.Email && user.UserName == inUser.UserName {
+		if user.Email == inUser.Email && user.Username == inUser.Username {
 			return true
 		}
 	}
