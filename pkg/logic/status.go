@@ -29,8 +29,8 @@ func ExecuteStatus() {
 		return
 	}
 
-	// Get staged project
-	stagedProject := GetStagedProject()
+	// Get staged projects
+	stagedProjects := GetStagedProjects()
 
 	// TODO: Build function to parse and display tracked files not staged for commit (red)
 	notStaged := GetNotStaged()
@@ -39,10 +39,12 @@ func ExecuteStatus() {
 	notTracked := getUntracked()
 
 	// TODO: better way to check if staged project exists
-	if stagedProject.Name != "" {
+	if len(stagedProjects) > 0 {
 		// Show changed files to be committed (green)
 		fmt.Println("Changes to be committed:\n  (use \"daw restore --staged <file>...\" to unstage)")
-		fmt.Println(colors.Green + "\t" + stagedProject.Name + colors.White)
+		for _, stagedProject := range stagedProjects {
+			fmt.Println(colors.Green + "\t" + stagedProject.Name + colors.White)
+		}
 		// New line for formatting
 		fmt.Println()
 	} else {
@@ -144,6 +146,7 @@ func isModifiedFile(fileName string) bool {
 	return false
 }
 
+// TODO: make this an io (sys) helper method
 // Returns last modified time from local dir
 func GetModifiedTime(fileName string) time.Time {
 	f, err := os.Stat(fileName)
@@ -155,9 +158,11 @@ func GetModifiedTime(fileName string) time.Time {
 
 // Returns true if file is staged, false otherwise
 func IsStagedFile(fileName string) bool {
-	stagedProject := GetStagedProject()
-	if stagedProject.Name == fileName {
-		return true
+	stagedProjects := GetStagedProjects()
+	for _, project := range stagedProjects {
+		if project.Name == fileName {
+			return true
+		}
 	}
 	return false
 }
