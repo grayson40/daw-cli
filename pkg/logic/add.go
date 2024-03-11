@@ -13,6 +13,7 @@ import (
 
 	constants "github.com/grayson40/daw/constants"
 	io "github.com/grayson40/daw/pkg/io"
+	api "github.com/grayson40/daw/pkg/requests"
 	"github.com/grayson40/daw/types"
 )
 
@@ -36,77 +37,103 @@ func ExecuteAdd(input []string) {
 		return
 	}
 
-	// // Get current user id
-	// userId := GetCurrentUser().ID.Hex()
+	// Get local staged projects
+	stagedProjects := GetStagedProjects()
 
-	// Turn this into api call
-	// Get staged project
-	stagedProject := GetStagedProject()
-
-	// Get project file input
-	projectFile := input[0]
-
-	// Get file name
-	name := projectFile
-
-	// Only want project files
-	splitString := strings.Split(name, ".")
-	if splitString[1] != "flp" {
-		fmt.Printf("fatal: pathspec '%s' is not valid for tracking", name)
-		return
+	// If input is ".", get all project files in directory
+	if input[0] == "." {
+		// Get all project files in directory
+		files, err := filepath.Glob("*.flp")
+		if err != nil {
+			log.Fatalf(err.Error())
+		}
+		input = files
 	}
 
-	// Check if file exists
-	if _, err := os.Stat(name); err != nil {
-		fmt.Printf("fatal: pathspec '%s' did not match any files", name)
-	} else {
+	// Loop over the list of input files
+	for _, projectFile := range input {
+		name := projectFile
+
+		// Only want project files
+		splitString := strings.Split(name, ".")
+		if splitString[1] != "flp" {
+			fmt.Printf("fatal: pathspec '%s' is not valid for tracking", name)
+			continue
+		}
+
+		// Check if file exists
+		if _, err := os.Stat(name); err != nil {
+			fmt.Printf("fatal: pathspec '%s' did not match any files", name)
+			continue
+		}
+
 		// Get absolute file path
 		path, err := filepath.Abs(name)
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
 
+		// Diff project with latest commit
+		diff := api.DiffProject(name)
+
+		// If no diff, continue
+		if diff == 0 {
+			continue
+		}
+
 		// Get last modified time
 		modTime := GetModifiedTime(name)
 
-		// Append file for staging
-		if !isStaged(path) {
-			var changes []types.Change
-			stagedProject = types.Project{
-				Name:    name,
-				Path:    path,
-				Saved:   modTime,
-				Changes: changes,
+		file := types.File{
+			Name:  name,
+			Path:  path,
+			Saved: modTime,
+		}
+		change := types.Change{
+			Category:    "Low Pass",
+			Instrument:  "Piano",
+			Description: "Decreased by 10",
+		}
+		stagedProject := types.Project{
+			Name:    name,
+			File:    file,
+			Changes: []types.Change{change},
+		}
+
+		// Flag to check if project is updated
+		updated := false
+
+		// Loop over the stagedProjects
+		for i, project := range stagedProjects {
+			// Check if the file path exists in the list
+			if project.File.Path == stagedProject.File.Path {
+				stagedProjects[i] = stagedProject
+				updated = true
+				break
 			}
+		}
+
+		// If the project was not updated, append it to the list
+		if !updated {
+			stagedProjects = append(stagedProjects, stagedProject)
 		}
 	}
 
-	// Turn this into api call
 	// Write to staged json
-	err := writeStaged(stagedProject)
+	err := writeStaged(stagedProjects)
 	if err != nil {
 		panic(err)
 	}
 }
 
-// Returns true if file is already staged
-func isStaged(filepath string) bool {
-	stagedProject := GetStagedProject()
-	if stagedProject.Path == filepath {
-		return true
-	}
-	return false
-}
-
-// Make this an api call
-// Writes commit array to json file, returns err
-func writeStaged(stagedProject types.Project) error {
-	file, err := json.MarshalIndent(stagedProject, "", "\t")
+// Writes commit array to json file, returns error
+func writeStaged(stagedProjects []types.Project) error {
+	stagedObject, err := json.MarshalIndent(stagedProjects, "", "\t")
 	if err != nil {
 		panic(err)
 	}
 
-	io.WriteToFile(constants.StagedPath, file)
+	io.WriteToFile(constants.StagedPath, stagedObject)
 
 	return err
 }
